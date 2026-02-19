@@ -1,0 +1,8 @@
+# Global ownership
+* @flaviopiccolo-boop
+
+# Deployment ownership
+/apps/ @flaviopiccolo-boop
+/environments/ @flaviopiccolo-boop
+/argocd/ @flaviopiccolo-boop
+/docs/ @flaviopiccolo-boop
