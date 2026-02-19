@@ -1,8 +1,8 @@
 # Global ownership
-* @flaviopiccolo-boop
+* @pipeops-platform/reviewers
 
 # Deployment ownership
-/apps/ @flaviopiccolo-boop
-/environments/ @flaviopiccolo-boop
-/argocd/ @flaviopiccolo-boop
-/docs/ @flaviopiccolo-boop
+/apps/ @pipeops-platform/reviewers
+/environments/ @pipeops-platform/reviewers
+/argocd/ @pipeops-platform/reviewers
+/docs/ @pipeops-platform/reviewers
