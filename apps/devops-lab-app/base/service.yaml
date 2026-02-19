@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-lab-app
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: devops-lab-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
