@@ -11,7 +11,7 @@ docker images pipeops/devops-lab-app
 2. Import image into k3d cluster
 
 ```powershell
-k3d image import pipeops/devops-lab-app:0.2.0 -c devops-lab-local
+k3d image import pipeops/devops-lab-app:0.3.0 -c devops-lab-local
 ```
 
 3. Apply `dev` overlay
@@ -23,8 +23,9 @@ kubectl apply -k apps/devops-lab-app/overlays/dev
 4. Validate rollout and resources
 
 ```powershell
-kubectl -n devops-lab-app-dev get deploy,po,svc,ingress
+kubectl -n devops-lab-app-dev get deploy,po,svc,ingress,pvc,secret
 kubectl -n devops-lab-app-dev rollout status deploy/devops-lab-app
+kubectl -n devops-lab-app-dev rollout status deploy/devops-lab-postgres
 ```
 
 5. Validate ingress access
