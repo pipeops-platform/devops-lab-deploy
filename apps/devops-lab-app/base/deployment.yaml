@@ -21,6 +21,25 @@ spec:
           env:
             - name: APP_ENV
               value: base
+            - name: DB_HOST
+              value: devops-lab-postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: devops-lab-postgres-secret
+                  key: db-name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: devops-lab-postgres-secret
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devops-lab-postgres-secret
+                  key: db-password
           resources:
             requests:
               cpu: 100m
