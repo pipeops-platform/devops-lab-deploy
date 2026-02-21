@@ -4,7 +4,7 @@ metadata:
   name: devops-lab-app
 spec:
   rules:
-    - host: devops-lab-app-prod.localtest.me
+    - host: devops-lab-app-prod-green.localtest.me
       http:
         paths:
           - path: /

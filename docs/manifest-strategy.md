@@ -13,7 +13,8 @@ apps/
 		overlays/
 			dev/
 			staging/
-			prod/
+			prod-blue/
+			prod-green/
 ```
 
 ## Baseline Resources
@@ -29,13 +30,14 @@ apps/
 - `base` contains portable defaults and shared labels
 - `overlays/dev` defines lower footprint and first validation host
 - `overlays/staging` increases replicas/resources for pre-prod confidence
-- `overlays/prod` defines production-oriented capacity
+- `overlays/prod-blue` defines one production slot for blue/green rollout
+- `overlays/prod-green` defines the alternate production slot for blue/green rollout
 
 ## Environment Promotion
 
 - `dev` receives first deployment
 - `staging` validates release candidate behavior
-- `prod` receives approved stable version
+- `prod-blue` and `prod-green` support controlled cutover between active and standby production slots
 
 ## Versioning Model
 

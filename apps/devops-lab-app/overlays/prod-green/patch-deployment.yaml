@@ -10,7 +10,7 @@ spec:
         - name: app
           env:
             - name: APP_ENV
-              value: prod
+              value: prod-green
           resources:
             requests:
               cpu: 200m
