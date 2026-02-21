@@ -15,11 +15,17 @@ It complements (not replaces) manifest truth in this repository and runtime trut
 
 | Environment | Overlay Path | GitOps Application | Target Image Tag | Promotion Source | Status Evidence |
 |---|---|---|---|---|---|
-| dev | `apps/devops-lab-app/overlays/dev` | `devops-lab-app-dev` | `0.3.0` | `main` (app CI output) | ArgoCD app + `/health` |
-| staging | `apps/devops-lab-app/overlays/staging` | `devops-lab-app-staging` | `0.3.0` | `dev` validation | ArgoCD app + `/health` |
-| prod-blue | `apps/devops-lab-app/overlays/prod-blue` | `devops-lab-app-prod-blue` | `0.3.0` | `staging` validation | ArgoCD app + `/health` |
-| prod-green | `apps/devops-lab-app/overlays/prod-green` | `devops-lab-app-prod-green` | `0.3.0` | `staging` validation | ArgoCD app + `/health` |
+| dev | `apps/devops-lab-app/overlays/dev` | `devops-lab-app-dev` | `sha-7462ef02c1f65208e7e8d9c879563a5b43bb3270` | automatic from `app/main` CI | ArgoCD app + `/health` |
+| staging | `apps/devops-lab-app/overlays/staging` | `devops-lab-app-staging` | `sha-7462ef02c1f65208e7e8d9c879563a5b43bb3270` | manual promotion PR from `dev` | ArgoCD app + `/health` |
+| prod-blue | `apps/devops-lab-app/overlays/prod-blue` | `devops-lab-app-prod-blue` | `sha-7462ef02c1f65208e7e8d9c879563a5b43bb3270` | manual promotion PR from `staging` | ArgoCD app + `/health` |
+| prod-green | `apps/devops-lab-app/overlays/prod-green` | `devops-lab-app-prod-green` | `sha-7462ef02c1f65208e7e8d9c879563a5b43bb3270` | manual promotion PR from `staging` | ArgoCD app + `/health` |
 | prod-shared-db | `apps/devops-lab-shared-db/overlays/prod` | `devops-lab-shared-db-prod` | `postgres:16-alpine` | controlled DB lifecycle | ArgoCD app + deployment status |
+
+## Promotion Policy (Current)
+
+- App CI auto-opens promotion PR only for `dev` overlay.
+- `staging` and `prod-*` must be promoted by explicit PRs in `devops-lab-deploy`.
+- Production exposure remains controlled by blue/green cutover script after slot validation.
 
 ## Update Procedure
 
