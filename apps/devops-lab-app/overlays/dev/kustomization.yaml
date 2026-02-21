@@ -9,7 +9,7 @@ namespace: devops-lab-app-dev
 
 images:
   - name: pipeops/devops-lab-app
-    newTag: "0.3.0"
+    newTag: "sha-48a63ca3d494fb5eda9894599d57adb24f85bb34"
 patches:
   - path: patch-deployment.yaml
   - path: patch-ingress.yaml
