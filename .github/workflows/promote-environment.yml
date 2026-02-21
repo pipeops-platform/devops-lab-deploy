@@ -71,22 +71,33 @@ jobs:
           target_content = target_file.read_text(encoding="utf-8")
 
           source_image_match = re.search(r'(?m)^\s*-\s*name:\s*(.+)$', source_content)
+          source_new_name_match = re.search(r'(?m)^\s*newName:\s*(.+)$', source_content)
           source_tag_match = re.search(r'(?m)^\s*newTag:\s*"([^"]+)"\s*$', source_content)
 
           if not source_image_match or not source_tag_match:
             raise SystemExit("Could not read image name/newTag from source overlay")
 
           source_image = source_image_match.group(1).strip()
+          source_new_name = source_new_name_match.group(1).strip() if source_new_name_match else source_image
           source_tag = source_tag_match.group(1).strip()
 
           updated = re.sub(r'(?m)^(\s*-\s*name:\s*).+$', rf'\1{source_image}', target_content)
+          if re.search(r'(?m)^\s*newName:\s*.+$', updated):
+            updated = re.sub(r'(?m)^(\s*newName:\s*).+$', rf'\1{source_new_name}', updated)
+          else:
+            updated = re.sub(
+              r'(?m)^(\s*)-\s*name:\s*.+$',
+              rf'\1- name: {source_image}\n\1  newName: {source_new_name}',
+              updated,
+              count=1,
+            )
           updated = re.sub(r'(?m)^(\s*newTag:\s*").*("\s*)$', rf'\1{source_tag}\2', updated)
 
           target_file.write_text(updated, encoding="utf-8")
 
           github_output = Path(os.environ["GITHUB_OUTPUT"])
           with github_output.open("a", encoding="utf-8") as output:
-            output.write(f"image_name={source_image}\n")
+            output.write(f"image_name={source_new_name}\n")
             output.write(f"image_tag={source_tag}\n")
           PY
 
