@@ -24,7 +24,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   rollback:
@@ -100,15 +99,10 @@ jobs:
             output.write(f"image_tag={image_tag}\n")
           PY
 
-      - name: Create rollback PR
+      - name: Push rollback to main
         env:
-          GH_TOKEN: ${{ secrets.APP_PR_TOKEN != '' && secrets.APP_PR_TOKEN || github.token }}
           TARGET_ENV: ${{ inputs.target_env }}
-          REQUESTED_BY: ${{ inputs.requested_by }}
-          CORRELATION_ID: ${{ inputs.correlation_id }}
           TARGET_FILE: ${{ steps.resolve.outputs.target_file }}
-          PREVIOUS_COMMIT: ${{ steps.resolve.outputs.previous_commit }}
-          IMAGE_NAME: ${{ steps.resolve.outputs.image_name }}
           IMAGE_TAG: ${{ steps.resolve.outputs.image_tag }}
         run: |
           if git diff --quiet -- "$TARGET_FILE"; then
@@ -116,48 +110,8 @@ jobs:
             exit 0
           fi
 
-          BRANCH="rollback-${TARGET_ENV}-${IMAGE_TAG}"
-          git checkout -B "$BRANCH"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "$TARGET_FILE"
           git commit -m "chore(deploy): rollback ${TARGET_ENV} to ${IMAGE_TAG}"
-          git push --force-with-lease --set-upstream origin "$BRANCH"
-
-          EXISTING_PR=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
-          if [ -n "$EXISTING_PR" ]; then
-            echo "PR already exists: #$EXISTING_PR"
-
-            if gh pr merge --auto --squash "$EXISTING_PR"; then
-              echo "Auto-merge enabled for existing PR #$EXISTING_PR"
-              exit 0
-            fi
-
-            echo "Failed to enable auto-merge for existing PR #$EXISTING_PR"
-            echo "Repository rules may still require explicit approvals/permissions for bot auto-merge."
-            exit 1
-          fi
-
-          REQUESTED_BY_TEXT="${REQUESTED_BY:-unknown}"
-          CORRELATION_TEXT="${CORRELATION_ID:-n/a}"
-
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore(deploy): rollback ${TARGET_ENV} to previous stable (${IMAGE_TAG})" \
-            --body "Automated rollback to previous stable in deploy repo.\n\n- Target environment: ${TARGET_ENV}\n- Rolled back image repository: ${IMAGE_NAME}\n- Rolled back image tag: ${IMAGE_TAG}\n- Previous stable commit: ${PREVIOUS_COMMIT}\n- Requested by: ${REQUESTED_BY_TEXT}\n- Correlation id: ${CORRELATION_TEXT}"
-
-          CREATED_PR=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
-          if [ -z "$CREATED_PR" ]; then
-            echo "Could not resolve created rollback PR number"
-            exit 1
-          fi
-
-          if gh pr merge --auto --squash "$CREATED_PR"; then
-            echo "Auto-merge enabled for PR #$CREATED_PR"
-            exit 0
-          fi
-
-          echo "Failed to enable auto-merge for PR #$CREATED_PR"
-          echo "Repository rules may still require explicit approvals/permissions for bot auto-merge."
-          exit 1
+          git push origin main
