@@ -1,5 +1,7 @@
 name: Promote Environment
 
+run-name: Promote ${{ inputs.source_env }} -> ${{ inputs.target_env }}${{ inputs.correlation_id && format(' ({0})', inputs.correlation_id) || '' }}
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,6 +20,10 @@ on:
           - staging
           - prod-blue
           - prod-green
+      correlation_id:
+        description: Correlation id from app orchestrator workflow (optional)
+        required: false
+        type: string
 
 permissions:
   contents: write
