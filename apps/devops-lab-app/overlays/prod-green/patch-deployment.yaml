@@ -11,6 +11,8 @@ spec:
           env:
             - name: APP_ENV
               value: prod-green
+            - name: DB_HOST
+              value: devops-lab-postgres-shared.devops-lab-app-prod-data.svc.cluster.local
           resources:
             requests:
               cpu: 200m

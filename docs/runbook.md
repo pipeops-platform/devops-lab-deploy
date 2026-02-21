@@ -47,6 +47,30 @@ Expected response:
 3. Validate service and ingress reachability
 4. Confirm no configuration drift
 
+## Blue/Green Shared DB Validation
+
+1. Apply shared production database stack
+
+```powershell
+kubectl apply -k apps/devops-lab-shared-db/overlays/prod
+kubectl -n devops-lab-app-prod-data rollout status deploy/devops-lab-postgres-shared
+```
+
+2. Apply both production slots
+
+```powershell
+kubectl apply -k apps/devops-lab-app/overlays/prod-blue
+kubectl apply -k apps/devops-lab-app/overlays/prod-green
+```
+
+3. Validate both slots and live endpoint
+
+```powershell
+curl.exe -s -H "Host: devops-lab-app-prod-blue.localtest.me" http://127.0.0.1/health
+curl.exe -s -H "Host: devops-lab-app-prod-green.localtest.me" http://127.0.0.1/health
+curl.exe -s -H "Host: devops-lab-app-prod.localtest.me" http://127.0.0.1/health
+```
+
 ## GitOps Validation
 
 1. Commit manifest changes
