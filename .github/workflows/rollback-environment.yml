@@ -102,7 +102,7 @@ jobs:
 
       - name: Create rollback PR
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.APP_PR_TOKEN != '' && secrets.APP_PR_TOKEN || github.token }}
           TARGET_ENV: ${{ inputs.target_env }}
           REQUESTED_BY: ${{ inputs.requested_by }}
           CORRELATION_ID: ${{ inputs.correlation_id }}
