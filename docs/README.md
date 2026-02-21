@@ -6,6 +6,7 @@ This repository contains Kubernetes deployment definitions used by GitOps.
 
 - [Architecture](architecture.md)
 - [Manifest Strategy](manifest-strategy.md)
+- [Environment Version Matrix](environment-version-matrix.md)
 - [Runbook](runbook.md)
 
 ## Main Responsibilities

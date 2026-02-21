@@ -50,6 +50,7 @@ apps/
 - Image tags must be immutable
 - Promotion updates only manifest references
 - Every promotion must be traceable by commit history
+- Environment-targeted versions must be tracked in `docs/environment-version-matrix.md`
 
 ## Local Validation Commands
 
