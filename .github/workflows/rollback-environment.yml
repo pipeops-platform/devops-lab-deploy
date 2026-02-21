@@ -1,0 +1,140 @@
+name: Rollback Environment
+
+run-name: Rollback ${{ inputs.target_env }} to previous stable${{ inputs.correlation_id && format(' ({0})', inputs.correlation_id) || '' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: Target environment overlay (staging|prod-blue|prod-green)
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod-blue
+          - prod-green
+      requested_by:
+        description: Actor requesting rollback (optional)
+        required: false
+        type: string
+      correlation_id:
+        description: Correlation id from app orchestrator workflow (optional)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rollback:
+    name: Rollback overlay to previous stable
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve previous stable image
+        id: resolve
+        env:
+          TARGET_ENV: ${{ inputs.target_env }}
+        run: |
+          TARGET_FILE="apps/devops-lab-app/overlays/${TARGET_ENV}/kustomization.yaml"
+
+          mapfile -t FILE_COMMITS < <(git log --format=%H -- "$TARGET_FILE")
+          if [ "${#FILE_COMMITS[@]}" -lt 2 ]; then
+            echo "No previous stable revision found for $TARGET_FILE"
+            exit 1
+          fi
+
+          PREV_COMMIT="${FILE_COMMITS[1]}"
+          echo "target_file=$TARGET_FILE" >> "$GITHUB_OUTPUT"
+          echo "previous_commit=$PREV_COMMIT" >> "$GITHUB_OUTPUT"
+
+          TARGET_FILE="$TARGET_FILE" PREV_COMMIT="$PREV_COMMIT" python - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          target_file = Path(os.environ["TARGET_FILE"])
+          previous_commit = os.environ["PREV_COMMIT"]
+
+          current_content = target_file.read_text(encoding="utf-8")
+          previous_content = subprocess.check_output(
+            ["git", "show", f"{previous_commit}:{target_file.as_posix()}"],
+            text=True,
+          )
+
+          def parse(content: str):
+            name_match = re.search(r'(?m)^\s*-\s*name:\s*(.+)$', content)
+            new_name_match = re.search(r'(?m)^\s*newName:\s*(.+)$', content)
+            tag_match = re.search(r'(?m)^\s*newTag:\s*"([^"]+)"\s*$', content)
+            if not name_match or not tag_match:
+              raise SystemExit("Could not parse image name/newTag in previous stable revision")
+            name = name_match.group(1).strip()
+            new_name = new_name_match.group(1).strip() if new_name_match else name
+            tag = tag_match.group(1).strip()
+            return name, new_name, tag
+
+          image_name, image_new_name, image_tag = parse(previous_content)
+
+          updated = re.sub(r'(?m)^(\s*-\s*name:\s*).+$', rf'\1{image_name}', current_content)
+          if re.search(r'(?m)^\s*newName:\s*.+$', updated):
+            updated = re.sub(r'(?m)^(\s*newName:\s*).+$', rf'\1{image_new_name}', updated)
+          else:
+            updated = re.sub(
+              r'(?m)^(\s*)-\s*name:\s*.+$',
+              rf'\1- name: {image_name}\n\1  newName: {image_new_name}',
+              updated,
+              count=1,
+            )
+          updated = re.sub(r'(?m)^(\s*newTag:\s*").*("\s*)$', rf'\1{image_tag}\2', updated)
+
+          target_file.write_text(updated, encoding="utf-8")
+
+          output_file = Path(os.environ["GITHUB_OUTPUT"])
+          with output_file.open("a", encoding="utf-8") as output:
+            output.write(f"image_name={image_new_name}\n")
+            output.write(f"image_tag={image_tag}\n")
+          PY
+
+      - name: Create rollback PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_ENV: ${{ inputs.target_env }}
+          REQUESTED_BY: ${{ inputs.requested_by }}
+          CORRELATION_ID: ${{ inputs.correlation_id }}
+          TARGET_FILE: ${{ steps.resolve.outputs.target_file }}
+          PREVIOUS_COMMIT: ${{ steps.resolve.outputs.previous_commit }}
+          IMAGE_NAME: ${{ steps.resolve.outputs.image_name }}
+          IMAGE_TAG: ${{ steps.resolve.outputs.image_tag }}
+        run: |
+          if git diff --quiet -- "$TARGET_FILE"; then
+            echo "No rollback change required"
+            exit 0
+          fi
+
+          BRANCH="rollback-${TARGET_ENV}-${IMAGE_TAG}"
+          git checkout -B "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_FILE"
+          git commit -m "chore(deploy): rollback ${TARGET_ENV} to ${IMAGE_TAG}"
+          git push --force-with-lease --set-upstream origin "$BRANCH"
+
+          EXISTING_PR=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: #$EXISTING_PR"
+            exit 0
+          fi
+
+          REQUESTED_BY_TEXT="${REQUESTED_BY:-unknown}"
+          CORRELATION_TEXT="${CORRELATION_ID:-n/a}"
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore(deploy): rollback ${TARGET_ENV} to previous stable (${IMAGE_TAG})" \
+            --body "Automated rollback to previous stable in deploy repo.\n\n- Target environment: ${TARGET_ENV}\n- Rolled back image repository: ${IMAGE_NAME}\n- Rolled back image tag: ${IMAGE_TAG}\n- Previous stable commit: ${PREVIOUS_COMMIT}\n- Requested by: ${REQUESTED_BY_TEXT}\n- Correlation id: ${CORRELATION_TEXT}"
