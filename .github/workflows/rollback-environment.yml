@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   rollback:
@@ -101,10 +102,14 @@ jobs:
             output.write(f"image_tag={image_tag}\n")
           PY
 
-      - name: Push rollback to main
+      - name: Create and merge rollback PR
         env:
+          GH_TOKEN: ${{ secrets.APP_PR_TOKEN }}
           TARGET_ENV: ${{ inputs.target_env }}
+          REQUESTED_BY: ${{ inputs.requested_by }}
+          CORRELATION_ID: ${{ inputs.correlation_id }}
           TARGET_FILE: ${{ steps.resolve.outputs.target_file }}
+          IMAGE_NAME: ${{ steps.resolve.outputs.image_name }}
           IMAGE_TAG: ${{ steps.resolve.outputs.image_tag }}
         run: |
           if git diff --quiet -- "$TARGET_FILE"; then
@@ -112,8 +117,24 @@ jobs:
             exit 0
           fi
 
+          BRANCH="rollback-${TARGET_ENV}-${IMAGE_TAG}"
+          git checkout -B "$BRANCH"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add "$TARGET_FILE"
           git commit -m "chore(deploy): rollback ${TARGET_ENV} to ${IMAGE_TAG}"
-          git push origin main
+          git push --force-with-lease --set-upstream origin "$BRANCH"
+
+          EXISTING_PR=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -z "$EXISTING_PR" ]; then
+            REQUESTED_BY_TEXT="${REQUESTED_BY:-unknown}"
+            CORRELATION_TEXT="${CORRELATION_ID:-n/a}"
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore(deploy): rollback ${TARGET_ENV} to previous stable (${IMAGE_TAG})" \
+              --body "Automated rollback in deploy repo.\n\n- Target: ${TARGET_ENV}\n- Image: ${IMAGE_NAME}:${IMAGE_TAG}\n- Requested by: ${REQUESTED_BY_TEXT}\n- Correlation: ${CORRELATION_TEXT}"
+            EXISTING_PR=$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number')
+          fi
+
+          gh pr merge "$EXISTING_PR" --squash --admin --delete-branch
