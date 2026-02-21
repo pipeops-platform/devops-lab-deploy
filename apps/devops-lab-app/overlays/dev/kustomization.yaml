@@ -8,8 +8,8 @@ resources:
 namespace: devops-lab-app-dev
 
 images:
-  - name: pipeops/devops-lab-app
-    newTag: "sha-bdfbce4846cf8bb923c7976f730d680352a176ce"
+  - name: docker.io/flaviopiccolo/devops-lab-app
+    newTag: "sha-f6387f3c751a6ebcf3081fc2030a51d472de341f"
 patches:
   - path: patch-deployment.yaml
   - path: patch-ingress.yaml
