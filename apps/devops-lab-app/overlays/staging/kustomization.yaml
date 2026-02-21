@@ -9,7 +9,8 @@ namespace: devops-lab-app-staging
 
 images:
   - name: pipeops/devops-lab-app
-    newTag: "0.3.0"
+    newName: docker.io/flaviopiccolo/devops-lab-app
+    newTag: "sha-ab5ca8b503d121964388a3fac9e62e556373f900"
 
 patches:
   - path: patch-deployment.yaml
