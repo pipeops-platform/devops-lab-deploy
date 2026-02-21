@@ -18,4 +18,4 @@ labels:
 
 images:
   - name: pipeops/devops-lab-app
-    newTag: "0.3.0"
+    newTag: "sha-7462ef02c1f65208e7e8d9c879563a5b43bb3270"
