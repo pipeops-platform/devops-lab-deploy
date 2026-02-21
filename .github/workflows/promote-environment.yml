@@ -103,6 +103,7 @@ jobs:
 
       - name: Create promotion PR
         env:
+          GH_TOKEN: ${{ github.token }}
           SOURCE_ENV: ${{ inputs.source_env }}
           TARGET_ENV: ${{ inputs.target_env }}
           IMAGE_NAME: ${{ steps.promote.outputs.image_name }}
