@@ -77,6 +77,17 @@ curl.exe -s -H "Host: devops-lab-app-prod.localtest.me" http://127.0.0.1/health
 2. Confirm ArgoCD sync status
 3. Confirm healthy application status
 
+## Environment Version Tracking
+
+Use `docs/environment-version-matrix.md` as the operational snapshot of target versions per environment.
+
+During each promotion:
+
+1. Update overlay references in manifests.
+2. Verify matrix entries are still accurate (tag, overlay path, app name).
+3. Include matrix validation evidence in PR description.
+4. After merge, confirm ArgoCD `Synced/Healthy` for all affected applications.
+
 ## Definition of Done
 
 Deployment changes are declarative, synced by ArgoCD, and validated in target environment.
