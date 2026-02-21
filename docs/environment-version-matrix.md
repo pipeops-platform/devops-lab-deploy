@@ -26,6 +26,7 @@ It complements (not replaces) manifest truth in this repository and runtime trut
 - App CI auto-opens promotion PR only for `dev` overlay.
 - `staging` and `prod-*` must be promoted by explicit PRs in `devops-lab-deploy`.
 - Production exposure remains controlled by blue/green cutover script after slot validation.
+- Image tag source of truth is the environment overlay (`base` must not define app image tags).
 
 ## Update Procedure
 
