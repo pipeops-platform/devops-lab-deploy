@@ -88,6 +88,25 @@ During each promotion:
 3. Include matrix validation evidence in PR description.
 4. After merge, confirm ArgoCD `Synced/Healthy` for all affected applications.
 
+## Promotion Between Environments (Deploy Repo)
+
+Use workflow `Promote Environment` in this repository to promote the same built image between overlays without rebuilding.
+
+Allowed paths:
+
+- `dev -> staging`
+- `staging -> prod-blue`
+- `staging -> prod-green`
+
+Execution:
+
+1. Open Actions in `devops-lab-deploy`.
+2. Run `Promote Environment`.
+3. Select `source_env` and `target_env`.
+4. Review generated PR with overlay diff (image `name` + `newTag`).
+5. Merge after required approvals/checks.
+6. Confirm ArgoCD for target app is `Synced` and `Healthy`.
+
 ## Definition of Done
 
 Deployment changes are declarative, synced by ArgoCD, and validated in target environment.
