@@ -5,7 +5,7 @@ resources:
   - ../../base
   - namespace.yaml
 
-namespace: devops-lab-app-prod
+namespace: devops-lab-app-prod-blue
 
 patches:
   - path: patch-deployment.yaml

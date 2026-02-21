@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-lab-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: app
+          env:
+            - name: APP_ENV
+              value: prod-blue
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 600m
+              memory: 512Mi

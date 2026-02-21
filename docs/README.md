@@ -11,6 +11,6 @@ This repository contains Kubernetes deployment definitions used by GitOps.
 ## Main Responsibilities
 
 - Store declarative Kubernetes manifests
-- Manage environment overlays (`dev`, `staging`, `prod`)
+- Manage environment overlays (`dev`, `staging`, `prod-blue`, `prod-green`)
 - Provide ArgoCD-compatible application definitions
 - Track image version promotion
