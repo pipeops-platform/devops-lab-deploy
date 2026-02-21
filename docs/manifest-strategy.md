@@ -15,6 +15,10 @@ apps/
 			staging/
 			prod-blue/
 			prod-green/
+	devops-lab-shared-db/
+		base/
+		overlays/
+			prod/
 ```
 
 ## Baseline Resources
@@ -32,12 +36,14 @@ apps/
 - `overlays/staging` increases replicas/resources for pre-prod confidence
 - `overlays/prod-blue` defines one production slot for blue/green rollout
 - `overlays/prod-green` defines the alternate production slot for blue/green rollout
+- `devops-lab-shared-db/overlays/prod` defines a shared production database consumed by both slots
 
 ## Environment Promotion
 
 - `dev` receives first deployment
 - `staging` validates release candidate behavior
 - `prod-blue` and `prod-green` support controlled cutover between active and standby production slots
+- both production slots must keep schema compatibility with the shared production database
 
 ## Versioning Model
 

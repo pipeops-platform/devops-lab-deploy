@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-lab-postgres
+$patch: delete
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-lab-postgres
+$patch: delete
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: devops-lab-postgres-data
+$patch: delete
