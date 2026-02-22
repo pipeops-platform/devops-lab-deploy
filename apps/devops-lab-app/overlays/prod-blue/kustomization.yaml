@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
   - namespace.yaml
+  - hpa.yaml
 
 namespace: devops-lab-app-prod-blue
 
