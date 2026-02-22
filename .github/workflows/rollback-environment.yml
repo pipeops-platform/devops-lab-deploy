@@ -6,13 +6,14 @@ on:
   workflow_dispatch:
     inputs:
       target_env:
-        description: Target environment overlay (staging|prod-blue|prod-green)
+        description: Target environment overlay (staging|prod-blue|prod-green|aws-staging)
         required: true
         type: choice
         options:
           - staging
           - prod-blue
           - prod-green
+          - aws-staging
       requested_by:
         description: Actor requesting rollback (optional)
         required: false
