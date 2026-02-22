@@ -3,9 +3,9 @@ kind: Ingress
 metadata:
   name: devops-lab-app
 spec:
+  ingressClassName: traefik
   rules:
-    - host: devops-lab-app-aws-staging.localtest.me
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
