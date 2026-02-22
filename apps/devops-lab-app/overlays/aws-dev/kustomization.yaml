@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+namespace: devops-lab-app-aws-dev
+
+images:
+  - name: pipeops/devops-lab-app
+    newName: docker.io/flaviopiccolo/devops-lab-app
+    newTag: "sha-aa5f984d3dd3f26b1411db21e05639b044936b6e"
+
+patches:
+  - path: patch-deployment.yaml
+  - path: patch-ingress.yaml

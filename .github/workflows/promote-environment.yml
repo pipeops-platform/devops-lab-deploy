@@ -6,20 +6,23 @@ on:
   workflow_dispatch:
     inputs:
       source_env:
-        description: Source environment overlay (dev|staging)
+        description: Source environment overlay (dev|staging|aws-dev)
         required: true
         type: choice
         options:
           - dev
           - staging
+          - aws-dev
       target_env:
-        description: Target environment overlay (staging|prod-blue|prod-green)
+        description: Target environment overlay (staging|prod-blue|prod-green|aws-dev|aws-staging)
         required: true
         type: choice
         options:
           - staging
           - prod-blue
           - prod-green
+          - aws-dev
+          - aws-staging
       correlation_id:
         description: Correlation id from app orchestrator workflow (optional)
         required: false
@@ -42,6 +45,16 @@ jobs:
         run: |
           if [ "$SOURCE_ENV" = "dev" ] && [ "$TARGET_ENV" = "staging" ]; then
             echo "Promotion path allowed: dev -> staging"
+            exit 0
+          fi
+
+          if [ "$SOURCE_ENV" = "dev" ] && [ "$TARGET_ENV" = "aws-dev" ]; then
+            echo "Promotion path allowed: dev -> aws-dev"
+            exit 0
+          fi
+
+          if [ "$SOURCE_ENV" = "aws-dev" ] && [ "$TARGET_ENV" = "aws-staging" ]; then
+            echo "Promotion path allowed: aws-dev -> aws-staging"
             exit 0
           fi
 
