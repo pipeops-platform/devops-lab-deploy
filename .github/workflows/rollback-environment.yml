@@ -21,6 +21,10 @@ on:
         description: Correlation id from app orchestrator workflow (optional)
         required: false
         type: string
+      rollback_version:
+        description: Optional image tag to rollback to (e.g. sha-...); empty means previous stable
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -41,16 +45,43 @@ jobs:
         id: resolve
         env:
           TARGET_ENV: ${{ inputs.target_env }}
+          ROLLBACK_VERSION: ${{ inputs.rollback_version }}
         run: |
           TARGET_FILE="apps/devops-lab-app/overlays/${TARGET_ENV}/kustomization.yaml"
 
           mapfile -t FILE_COMMITS < <(git log --format=%H -- "$TARGET_FILE")
-          if [ "${#FILE_COMMITS[@]}" -lt 2 ]; then
-            echo "No previous stable revision found for $TARGET_FILE"
-            exit 1
+
+          if [ -n "$ROLLBACK_VERSION" ]; then
+            PREV_COMMIT=""
+            for COMMIT in "${FILE_COMMITS[@]}"; do
+              CONTENT=$(git show "${COMMIT}:${TARGET_FILE}" || true)
+              if echo "$CONTENT" | grep -Eq "^\s*newTag:\s*\"${ROLLBACK_VERSION}\"\s*$"; then
+                PREV_COMMIT="$COMMIT"
+                break
+              fi
+            done
+
+            if [ -z "$PREV_COMMIT" ]; then
+              echo "Requested rollback version '${ROLLBACK_VERSION}' was not found in history for ${TARGET_FILE}."
+              echo "Recent available versions:"
+              git log --format=%H -- "$TARGET_FILE" | head -n 30 | while read -r COMMIT; do
+                git show "${COMMIT}:${TARGET_FILE}" | sed -n 's/^\s*newTag:\s*"\(.*\)"\s*$/\1/p'
+              done | awk 'NF && !seen[$0]++' | head -n 10 | sed 's/^/- /'
+              exit 1
+            fi
+          else
+            if [ "${#FILE_COMMITS[@]}" -lt 2 ]; then
+              echo "No previous stable revision found for $TARGET_FILE"
+              echo "Tip: open rollback issue and provide 'Rollback version (optional)' with a known deployed tag."
+              echo "Known versions in history:"
+              git log --format=%H -- "$TARGET_FILE" | head -n 30 | while read -r COMMIT; do
+                git show "${COMMIT}:${TARGET_FILE}" | sed -n 's/^\s*newTag:\s*"\(.*\)"\s*$/\1/p'
+              done | awk 'NF && !seen[$0]++' | head -n 10 | sed 's/^/- /'
+              exit 1
+            fi
+            PREV_COMMIT="${FILE_COMMITS[1]}"
           fi
 
-          PREV_COMMIT="${FILE_COMMITS[1]}"
           echo "target_file=$TARGET_FILE" >> "$GITHUB_OUTPUT"
           echo "previous_commit=$PREV_COMMIT" >> "$GITHUB_OUTPUT"
 
