@@ -10,7 +10,7 @@ namespace: devops-lab-app-dev
 images:
   - name: pipeops/devops-lab-app
     newName: docker.io/flaviopiccolo/devops-lab-app
-    newTag: "sha-aa5f984d3dd3f26b1411db21e05639b044936b6e"
+    newTag: "sha-89abf43ea3b900dc933edbed380d8d41e559f48e"
 patches:
   - path: patch-deployment.yaml
   - path: patch-ingress.yaml
